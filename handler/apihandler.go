@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"github.com/emicklei/go-restful"
 	"github.com/kfcoding-ingress-controller/kftype"
-	"github.com/kubernetes/dashboard/src/app/backend/resource/ingress"
 	"errors"
 )
 
@@ -26,13 +25,11 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 
 	apiV1Ws.Route(
 		apiV1Ws.PUT("/ingress/{namespace}/{ingress}/{pod}").
-			To(apiHandler.handleAddIngressRule).
-			Writes(ingress.IngressDetail{}))
+			To(apiHandler.handleAddIngressRule))
 
 	apiV1Ws.Route(
 		apiV1Ws.DELETE("/ingress/{namespace}/{ingress}/{pod}").
-			To(apiHandler.handleDeleteIngressRule).
-			Writes(ingress.IngressDetail{}))
+			To(apiHandler.handleDeleteIngressRule))
 
 	wsContainer := restful.NewContainer()
 	wsContainer.EnableContentEncoding(true)
@@ -43,6 +40,10 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 
 func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, response *restful.Response) {
 
+	if !apiHandler.checkCache(response) {
+		return
+	}
+
 	namespace := request.PathParameter("namespace")
 	ingress := request.PathParameter("ingress")
 	pod := request.PathParameter("pod")
@@ -52,7 +53,7 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 		return
 	}
 
-	done := make(chan string)
+	done := make(chan error)
 
 	req := &kftype.Request{
 		Option:    kftype.INGRESS_RULE_ADD,
@@ -64,11 +65,23 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 
 	apiHandler.channel <- req
 
-	result := <-done
-	response.Write([]byte(result))
+	err := <-done
+
+	close(done)
+
+	if err != nil {
+		response.WriteError(http.StatusInternalServerError, err)
+	} else {
+		response.WriteEntity(nil)
+	}
+
 }
 
 func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, response *restful.Response) {
+
+	if !apiHandler.checkCache(response) {
+		return
+	}
 
 	namespace := request.PathParameter("namespace")
 	ingress := request.PathParameter("ingress")
@@ -79,7 +92,7 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 		return
 	}
 
-	done := make(chan string)
+	done := make(chan error)
 
 	req := &kftype.Request{
 		Option:    kftype.INGRESS_RULE_DELETE,
@@ -91,6 +104,22 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 
 	apiHandler.channel <- req
 
-	result := <-done
-	response.Write([]byte(result))
+	err := <-done
+
+	close(done)
+
+	if err != nil {
+		response.WriteError(http.StatusInternalServerError, err)
+	} else {
+		response.WriteEntity(nil)
+	}
+
+}
+
+func (apiHandler *APIHandler) checkCache(response *restful.Response) bool {
+	if cap(apiHandler.channel)-len(apiHandler.channel) <= 0 {
+		response.WriteError(http.StatusInternalServerError, errors.New("请求过载"))
+		return false
+	}
+	return true
 }

@@ -2,7 +2,7 @@ package kftype
 
 type Request struct {
 	Option    uint8
-	Done  chan string
+	Done  chan error
 	Namespace string
 	Ingress   string
 	Pod       string
