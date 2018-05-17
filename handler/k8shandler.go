@@ -7,6 +7,9 @@ import (
 	"log"
 	"context"
 	"encoding/json"
+	"strings"
+	"errors"
+	"strconv"
 )
 
 type K8sHandler struct {
@@ -40,6 +43,7 @@ func StartK8sHandler(channel chan *kftype.Request) {
 			}
 		}
 	}
+
 }
 
 func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
@@ -56,22 +60,49 @@ func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 			"}]" +
 			"}" +
 			"}"
-
-	body := []byte("[{\"op\":\"add\", \"path\":\"/spec/rules/1\", \"value\":" + rule + "}]")
-
-	log.Println("[{\"op\":\"add\", \"path\":\"/spec/rules/1\", \"value\":" + rule + "}]")
+	body := []byte("[{\"op\":\"add\", \"path\":\"/spec/rules/0\", \"value\":" + rule + "}]")
 
 	var f interface{}
-	err := json.Unmarshal(body, &f)
-	result, resp, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(context.Background(), request.Ingress, request.Namespace, f, nil)
+	if err := json.Unmarshal(body, &f); err != nil {
+		request.Done <- err
+		return
+	}
 
-	log.Println("result: ", result)
-	log.Println("resp: ", resp)
+	_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(context.Background(), request.Ingress, request.Namespace, f, nil)
 
 	request.Done <- err
 }
 
 func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 
-	request.Done <- nil
+	list, _, err := handler.k8sClient.ExtensionsV1beta1Api.ListNamespacedIngress(context.Background(), request.Namespace, nil)
+
+	if nil != err {
+		request.Done <- err
+		return
+	}
+
+	for _, v := range list.Items {
+		if strings.Compare(v.Metadata.Name, request.Ingress) == 0 {
+			var i = 0
+			for _, rule := range v.Spec.Rules {
+				if strings.Compare(rule.Host, request.Pod+".kfcoding.com") == 0 {
+					body := []byte("[{\"op\":\"remove\", \"path\":\"/spec/rules/" + strconv.Itoa(i) + "\"}]")
+					var f interface{}
+					if err := json.Unmarshal(body, &f); err != nil {
+						request.Done <- err
+						return
+					}
+					_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(context.Background(), request.Ingress, request.Namespace, f, nil)
+					request.Done <- err
+					return
+				}
+				i++
+
+			}
+
+		}
+	}
+
+	request.Done <- errors.New("No ingress rule " + request.Pod)
 }

@@ -88,7 +88,7 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 	pod := request.PathParameter("pod")
 
 	if namespace == "" || ingress == "" || pod == "" {
-		response.WriteError(http.StatusInternalServerError, errors.New("参数不完整"))
+		response.WriteError(http.StatusInternalServerError, errors.New("Incomplete parameters"))
 		return
 	}
 
@@ -118,7 +118,7 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 
 func (apiHandler *APIHandler) checkCache(response *restful.Response) bool {
 	if cap(apiHandler.channel)-len(apiHandler.channel) <= 0 {
-		response.WriteError(http.StatusInternalServerError, errors.New("请求过载"))
+		response.WriteError(http.StatusInternalServerError, errors.New("The queue is full"))
 		return false
 	}
 	return true
