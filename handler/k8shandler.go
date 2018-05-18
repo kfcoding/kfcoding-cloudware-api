@@ -84,8 +84,7 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 
 	for _, v := range list.Items {
 		if strings.Compare(v.Metadata.Name, request.Ingress) == 0 {
-			var i = 0
-			for _, rule := range v.Spec.Rules {
+			for i, rule := range v.Spec.Rules {
 				if strings.Compare(rule.Host, request.Pod+".kfcoding.com") == 0 {
 					body := []byte("[{\"op\":\"remove\", \"path\":\"/spec/rules/" + strconv.Itoa(i) + "\"}]")
 					var f interface{}
@@ -97,8 +96,6 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 					request.Done <- err
 					return
 				}
-				i++
-
 			}
 
 		}

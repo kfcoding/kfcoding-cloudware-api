@@ -9,7 +9,9 @@ import (
 
 func main() {
 
-	channel := make(chan *kftype.Request, 1000)
+	const QUEUE_SIZE = 1000
+
+	channel := make(chan *kftype.Request, QUEUE_SIZE)
 
 	go handler.StartK8sHandler(channel)
 
