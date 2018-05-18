@@ -49,7 +49,7 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 	pod := request.PathParameter("pod")
 
 	if namespace == "" || ingress == "" || pod == "" {
-		response.WriteError(http.StatusInternalServerError, errors.New("参数不完整"))
+		response.WriteError(http.StatusInternalServerError, errors.New("Incomplete parameters"))
 		return
 	}
 

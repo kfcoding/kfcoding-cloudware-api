@@ -48,18 +48,17 @@ func StartK8sHandler(channel chan *kftype.Request) {
 
 func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 
-	rule :=
-		"{" +
-			"\"host\": \"" + request.Pod + ".kfcoding.com\"," +
-			"\"http\": {" +
-			"\"paths\": [{" +
-			"\"backend\": {" +
-			"\"serviceName\": \"" + request.Pod + "svc" + "\"," +
-			"\"servicePort\": 3000" +
-			"}" +
-			"}]" +
-			"}" +
-			"}"
+	rule := "{" +
+		"\"host\": \"" + request.Pod + ".kfcoding.com\"," +
+		"\"http\": {" +
+		"\"paths\": [{" +
+		"\"backend\": {" +
+		"\"serviceName\": \"" + request.Pod + "svc" + "\"," +
+		"\"servicePort\": 3000" +
+		"}" +
+		"}]" +
+		"}" +
+		"}"
 	body := []byte("[{\"op\":\"add\", \"path\":\"/spec/rules/0\", \"value\":" + rule + "}]")
 
 	var f interface{}
@@ -97,7 +96,6 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 					return
 				}
 			}
-
 		}
 	}
 
