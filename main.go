@@ -15,7 +15,7 @@ func main() {
 
 	go handler.StartK8sHandler(channel)
 
-	http.Handle("/apis/", handler.CreateHTTPAPIHandler(channel))
+	http.Handle("/api/", handler.CreateHTTPAPIHandler(channel))
 
 	log.Println("Start rest server")
 

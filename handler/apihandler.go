@@ -19,16 +19,20 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 
 	apiV1Ws := new(restful.WebService)
 
-	apiV1Ws.Path("/apis/extensions/v1beta1").
+	apiV1Ws.Path("/api/").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
 	apiV1Ws.Route(
-		apiV1Ws.PUT("/ingress/{namespace}/{ingress}/{pod}").
+		apiV1Ws.PUT("/cloudware").
 			To(apiHandler.handleAddIngressRule))
 
 	apiV1Ws.Route(
-		apiV1Ws.DELETE("/ingress/{namespace}/{ingress}/{pod}").
+		apiV1Ws.DELETE("/cloudware").
+			To(apiHandler.handleDeleteIngressRule))
+
+	apiV1Ws.Route(
+		apiV1Ws.PUT("/cloudware/keepalive").
 			To(apiHandler.handleDeleteIngressRule))
 
 	wsContainer := restful.NewContainer()
@@ -44,35 +48,31 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 		return
 	}
 
-	namespace := request.PathParameter("namespace")
-	ingress := request.PathParameter("ingress")
-	pod := request.PathParameter("pod")
+	body := &kftype.Request{}
+	if err := request.ReadEntity(body); nil != err {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
+		return
+	}
 
-	if namespace == "" || ingress == "" || pod == "" {
-		response.WriteError(http.StatusInternalServerError, errors.New("Incomplete parameters"))
+	if body.Namespace == "" || body.Ingress == "" || body.Pod == "" {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
 
 	done := make(chan error)
+	body.Option = kftype.IngressRoleAdd
+	body.Done = done
 
-	req := &kftype.Request{
-		Option:    kftype.INGRESS_RULE_ADD,
-		Done:      done,
-		Namespace: namespace,
-		Ingress:   ingress,
-		Pod:       pod,
-	}
-
-	apiHandler.channel <- req
+	apiHandler.channel <- body
 
 	err := <-done
 
 	close(done)
 
 	if err != nil {
-		response.WriteError(http.StatusInternalServerError, err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 	} else {
-		response.WriteEntity(nil)
+		response.WriteHeaderAndEntity(http.StatusOK, kftype.Response{Content: ""})
 	}
 
 }
@@ -83,35 +83,31 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 		return
 	}
 
-	namespace := request.PathParameter("namespace")
-	ingress := request.PathParameter("ingress")
-	pod := request.PathParameter("pod")
+	body := &kftype.Request{}
+	if err := request.ReadEntity(body); nil != err {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
+		return
+	}
 
-	if namespace == "" || ingress == "" || pod == "" {
-		response.WriteError(http.StatusInternalServerError, errors.New("Incomplete parameters"))
+	if body.Namespace == "" || body.Ingress == "" || body.Pod == "" {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
 
 	done := make(chan error)
+	body.Option = kftype.IngressRoleDelete
+	body.Done = done
 
-	req := &kftype.Request{
-		Option:    kftype.INGRESS_RULE_DELETE,
-		Done:      done,
-		Namespace: namespace,
-		Ingress:   ingress,
-		Pod:       pod,
-	}
-
-	apiHandler.channel <- req
+	apiHandler.channel <- body
 
 	err := <-done
 
 	close(done)
 
 	if err != nil {
-		response.WriteError(http.StatusInternalServerError, err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 	} else {
-		response.WriteEntity(nil)
+		response.WriteHeaderAndEntity(http.StatusOK, kftype.Response{Content: ""})
 	}
 
 }

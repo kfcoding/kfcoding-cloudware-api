@@ -36,9 +36,9 @@ func StartK8sHandler(channel chan *kftype.Request) {
 
 			log.Println("select request ", *request)
 
-			if request.Option == kftype.INGRESS_RULE_ADD {
+			if request.Option == kftype.IngressRoleAdd {
 				handler.handleAddIngressRule(request)
-			} else if request.Option == kftype.INGRESS_RULE_DELETE {
+			} else if request.Option == kftype.IngressRoleDelete {
 				handler.handleDeleteIngressRule(request)
 			}
 		}
@@ -49,12 +49,12 @@ func StartK8sHandler(channel chan *kftype.Request) {
 func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 
 	rule := "{" +
-		"\"host\": \"" + request.Pod + ".kfcoding.com\"," +
+		"\"host\": \"" + request.Pod + ".cloudware.kfcoding.com\"," +
 		"\"http\": {" +
 		"\"paths\": [{" +
 		"\"backend\": {" +
-		"\"serviceName\": \"" + request.Pod + "svc" + "\"," +
-		"\"servicePort\": 3000" +
+		"\"serviceName\": \"" + request.Pod + "\"," +
+		"\"servicePort\": 9800" +
 		"}" +
 		"}]" +
 		"}" +
@@ -69,6 +69,10 @@ func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 
 	_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(context.Background(), request.Ingress, request.Namespace, f, nil)
 
+	if nil != err {
+		log.Print("handleAddIngressRule error", err)
+	}
+
 	request.Done <- err
 }
 
@@ -77,6 +81,7 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 	list, _, err := handler.k8sClient.ExtensionsV1beta1Api.ListNamespacedIngress(context.Background(), request.Namespace, nil)
 
 	if nil != err {
+		log.Print("handleDeleteIngressRule, ListNamespacedIngress", err)
 		request.Done <- err
 		return
 	}
@@ -84,14 +89,16 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 	for _, v := range list.Items {
 		if strings.Compare(v.Metadata.Name, request.Ingress) == 0 {
 			for i, rule := range v.Spec.Rules {
-				if strings.Compare(rule.Host, request.Pod+".kfcoding.com") == 0 {
+				if strings.Compare(rule.Host, request.Pod+".cloudware.kfcoding.com") == 0 {
 					body := []byte("[{\"op\":\"remove\", \"path\":\"/spec/rules/" + strconv.Itoa(i) + "\"}]")
 					var f interface{}
 					if err := json.Unmarshal(body, &f); err != nil {
+						log.Print("handleDeleteIngressRule, Unmarshal error", err)
 						request.Done <- err
 						return
 					}
 					_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(context.Background(), request.Ingress, request.Namespace, f, nil)
+					log.Print("handleDeleteIngressRule, PatchNamespacedIngress", err)
 					request.Done <- err
 					return
 				}
@@ -99,5 +106,6 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) {
 		}
 	}
 
+	log.Print("handleDeleteIngressRule", ", No ingress rule "+request.Pod)
 	request.Done <- errors.New("No ingress rule " + request.Pod)
 }

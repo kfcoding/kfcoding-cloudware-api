@@ -8,7 +8,11 @@ type Request struct {
 	Pod       string
 }
 
+type Response struct {
+	Content string
+}
+
 const (
-	INGRESS_RULE_ADD    = iota //0
-	INGRESS_RULE_DELETE        //1
+	IngressRoleAdd    = iota //0
+	IngressRoleDelete        //1
 )
