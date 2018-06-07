@@ -71,10 +71,10 @@ func StartK8sHandler(channel chan *kftype.Request) {
 	//ingress := client.ExtensionsV1beta1().Ingresses("")
 	//ingress.Patch(configs.IngressName, types.JSONPatchType, []byte(""))
 
-	handler := K8sHandler{
-		k8sClient:  client,
-		etcdClient: etcd.GetMyEtcdClient(),
-	}
+	//handler := K8sHandler{
+	//	k8sClient:  client,
+	//	etcdClient: etcd.GetMyEtcdClient(),
+	//}
 
 	go handler.Watcher()
 
