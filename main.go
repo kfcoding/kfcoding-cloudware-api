@@ -5,13 +5,14 @@ import (
 	"github.com/kfcoding-ingress-controller/handler"
 	"github.com/kfcoding-ingress-controller/kftype"
 	"log"
+	"github.com/kfcoding-ingress-controller/configs"
 )
 
 func main() {
 
-	const QUEUE_SIZE = 1000
+	configs.InitEnv()
 
-	channel := make(chan *kftype.Request, QUEUE_SIZE)
+	channel := make(chan *kftype.Request, configs.QueueSize)
 
 	go handler.StartK8sHandler(channel)
 
@@ -19,6 +20,6 @@ func main() {
 
 	log.Println("Start rest server")
 
-	log.Fatal(http.ListenAndServe("0.0.0.0:9090", nil))
+	log.Fatal(http.ListenAndServe(configs.ServerAddress, nil))
 
 }

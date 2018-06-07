@@ -5,16 +5,20 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/kfcoding-ingress-controller/kftype"
 	"errors"
+	"github.com/kfcoding-ingress-controller/etcd"
+	"log"
 )
 
 type APIHandler struct {
-	channel chan *kftype.Request
+	channel    chan *kftype.Request
+	etcdClient *etcd.MyEtcdClient
 }
 
 func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 
 	apiHandler := APIHandler{
-		channel: channel,
+		channel:    channel,
+		etcdClient: etcd.GetMyEtcdClient(),
 	}
 
 	apiV1Ws := new(restful.WebService)
@@ -33,13 +37,33 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 
 	apiV1Ws.Route(
 		apiV1Ws.PUT("/cloudware/keepalive").
-			To(apiHandler.handleDeleteIngressRule))
+			To(apiHandler.handleKeepAlive))
 
 	wsContainer := restful.NewContainer()
 	wsContainer.EnableContentEncoding(true)
 	wsContainer.Add(apiV1Ws)
 
 	return wsContainer
+}
+
+func (apiHandler *APIHandler) handleKeepAlive(request *restful.Request, response *restful.Response) {
+
+	body := &kftype.Request{}
+	if err := request.ReadEntity(body); nil != err {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
+		return
+	}
+
+	log.Print("handleKeepAlive: ", body.Pod)
+
+	err := handleKeepCloudwareAlive(body, apiHandler.etcdClient)
+
+	if err != nil {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
+	} else {
+		response.WriteHeaderAndEntity(http.StatusOK, kftype.Response{Content: ""})
+	}
+
 }
 
 func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, response *restful.Response) {
@@ -58,6 +82,8 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
+
+	log.Print("handleAddIngressRule: ", body.Pod)
 
 	done := make(chan error)
 	body.Option = kftype.IngressRoleAdd
@@ -93,6 +119,8 @@ func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, 
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
+
+	log.Print("handleAddIngressRule: ", body.Pod)
 
 	done := make(chan error)
 	body.Option = kftype.IngressRoleDelete
