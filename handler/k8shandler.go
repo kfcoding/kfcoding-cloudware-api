@@ -76,21 +76,21 @@ func StartK8sHandler(channel chan *kftype.Request) {
 	//	etcdClient: etcd.GetMyEtcdClient(),
 	//}
 
-	go handler.Watcher()
-
-	for {
-		select {
-		case request := <-channel:
-
-			log.Println("select request ", *request)
-
-			if request.Option == kftype.IngressRoleAdd {
-				handler.handleAddIngressRule(request)
-			} else if request.Option == kftype.IngressRoleDelete {
-				request.Done <- handler.handleDeleteIngressRule(request)
-			}
-		}
-	}
+	//go handler.Watcher()
+	//
+	//for {
+	//	select {
+	//	case request := <-channel:
+	//
+	//		log.Println("select request ", *request)
+	//
+	//		if request.Option == kftype.IngressRoleAdd {
+	//			handler.handleAddIngressRule(request)
+	//		} else if request.Option == kftype.IngressRoleDelete {
+	//			request.Done <- handler.handleDeleteIngressRule(request)
+	//		}
+	//	}
+	//}
 
 }
 
