@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"k8s.io/client/kubernetes/client"
 	"github.com/kfcoding-ingress-controller/kftype"
 	"log"
 	"context"
@@ -16,25 +15,79 @@ import (
 	"net/http"
 	"io/ioutil"
 
-	"k8s.io/client/kubernetes/config"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/rest"
 )
 
 type K8sHandler struct {
-	k8sClient  *client.APIClient
+	k8sClient  *kubernetes.Clientset
 	etcdClient *etcd.MyEtcdClient
+}
+
+func getK8sClientOutOfCluster() *kubernetes.Clientset {
+	config, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
+	if err != nil {
+		panic(err.Error())
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	return clientset
+}
+func getK8sClientInCluster() *kubernetes.Clientset {
+
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return clientset
 }
 
 func StartK8sHandler(channel chan *kftype.Request) {
 
-	log.Println("Start k8s handler")
+	//log.Println("Start k8s handler")
+	//
+	//c, err := config.InClusterConfig()
+	//// c, err := config.LoadKubeConfig()
+	//
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//client := client.NewAPIClient(c)
+	//
+	//handler := K8sHandler{
+	//	k8sClient:  client,
+	//	etcdClient: etcd.GetMyEtcdClient(),
+	//}
+	//
+	//go handler.Watcher()
+	//
+	//for {
+	//	select {
+	//	case request := <-channel:
+	//
+	//		log.Println("select request ", *request)
+	//
+	//		if request.Option == kftype.IngressRoleAdd {
+	//			handler.handleAddIngressRule(request)
+	//		} else if request.Option == kftype.IngressRoleDelete {
+	//			request.Done <- handler.handleDeleteIngressRule(request)
+	//		}
+	//	}
+	//}
 
-	c, err := config.InClusterConfig()
-	// c, err := config.LoadKubeConfig()
+	client := getK8sClientInCluster()
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := client.NewAPIClient(c)
+	//client := getK8sClientOutOfCluster()
 
 	handler := K8sHandler{
 		k8sClient:  client,
@@ -56,41 +109,6 @@ func StartK8sHandler(channel chan *kftype.Request) {
 			}
 		}
 	}
-
-	//log.Println("Start k8s handler")
-	//
-	//config, err := rest.InClusterConfig()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//client, err := kubernetes.NewForConfig(config)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//ingress := client.ExtensionsV1beta1().Ingresses("")
-	//ingress.Patch(configs.IngressName, types.JSONPatchType, []byte(""))
-
-	//handler := K8sHandler{
-	//	k8sClient:  client,
-	//	etcdClient: etcd.GetMyEtcdClient(),
-	//}
-
-	//go handler.Watcher()
-	//
-	//for {
-	//	select {
-	//	case request := <-channel:
-	//
-	//		log.Println("select request ", *request)
-	//
-	//		if request.Option == kftype.IngressRoleAdd {
-	//			handler.handleAddIngressRule(request)
-	//		} else if request.Option == kftype.IngressRoleDelete {
-	//			request.Done <- handler.handleDeleteIngressRule(request)
-	//		}
-	//	}
-	//}
 
 }
 
@@ -166,8 +184,12 @@ func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 
 	log.Print(string(body))
 
-	_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(
-		context.Background(), request.Ingress, request.Namespace, f, nil)
+	ingress := handler.k8sClient.ExtensionsV1beta1().Ingresses(configs.Namespace)
+	result, err := ingress.Patch(request.Ingress, types.JSONPatchType, []byte(body))
+	log.Print(result)
+
+	//_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(
+	//	context.Background(), request.Ingress, request.Namespace, f, nil)
 
 	if nil != err {
 		log.Print("handleAddIngressRule error", err)
@@ -179,9 +201,12 @@ func (handler *K8sHandler) handleAddIngressRule(request *kftype.Request) {
 }
 
 func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) (error) {
-	result, _, err := handler.k8sClient.ExtensionsV1beta1Api.ReadNamespacedIngress(
-		context.Background(), configs.IngressName, request.Namespace, nil)
+	ingress := handler.k8sClient.ExtensionsV1beta1().Ingresses(configs.Namespace)
+	result, err := ingress.Get(request.Ingress, v1.GetOptions{})
 
+	//result, _, err := handler.k8sClient.ExtensionsV1beta1Api.ReadNamespacedIngress(
+	//	context.Background(), configs.IngressName, request.Namespace, nil)
+	//
 	if nil != err {
 		return err
 	}
@@ -200,8 +225,11 @@ func (handler *K8sHandler) handleDeleteIngressRule(request *kftype.Request) (err
 
 			log.Print(string(body))
 
-			_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(
-				context.Background(), request.Ingress, request.Namespace, f, nil)
+			result, err = ingress.Patch(request.Ingress, types.JSONPatchType, body)
+			log.Print(result)
+
+			//_, _, err := handler.k8sClient.ExtensionsV1beta1Api.PatchNamespacedIngress(
+			//	context.Background(), request.Ingress, request.Namespace, f, nil)
 
 			if nil != err {
 				log.Print("handleDeleteIngressRule, PatchNamespacedIngress", err)
