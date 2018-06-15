@@ -67,7 +67,7 @@ func (apiHandler *APIHandler) handleKeepAlive(request *restful.Request, response
 func (apiHandler *APIHandler) handleAddRouting(request *restful.Request, response *restful.Response) {
 
 	// check token
-	if apiHandler.checkToekn(request, response) == false {
+	if apiHandler.checkToken(request, response) == false {
 		return
 	}
 
@@ -77,10 +77,11 @@ func (apiHandler *APIHandler) handleAddRouting(request *restful.Request, respons
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 		return
 	}
-	if body.Pod == "" || body.URL == "" {
+	if body.Name == "" || body.URL == "" || body.URL == "" {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
+
 	log.Print("handleAddRouting: ", body)
 
 	// add routing
@@ -98,7 +99,7 @@ func (apiHandler *APIHandler) handleAddRouting(request *restful.Request, respons
 func (apiHandler *APIHandler) handleDeleteRouting(request *restful.Request, response *restful.Response) {
 
 	// check token
-	if apiHandler.checkToekn(request, response) == false {
+	if apiHandler.checkToken(request, response) == false {
 		return
 	}
 
@@ -108,14 +109,15 @@ func (apiHandler *APIHandler) handleDeleteRouting(request *restful.Request, resp
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 		return
 	}
-	if body.Pod == "" {
+	if body.Name == "" {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
-	log.Print("handleAddRouting: ", body)
+
+	log.Print("handleDeleteRouting: ", body)
 
 	// delete routing
-	err := apiHandler.etcdHandler.handleAddRouting(body)
+	err := apiHandler.etcdHandler.handleDeleteRouting(body)
 
 	// return
 	if err != nil {
@@ -125,7 +127,7 @@ func (apiHandler *APIHandler) handleDeleteRouting(request *restful.Request, resp
 	}
 }
 
-func (apiHandler *APIHandler) checkToekn(request *restful.Request, response *restful.Response) bool {
+func (apiHandler *APIHandler) checkToken(request *restful.Request, response *restful.Response) bool {
 	token := request.HeaderParameter("Authorization")
 	if strings.Compare(token, configs.Token) != 0 {
 		response.WriteHeaderAndEntity(http.StatusUnauthorized, kftype.Response{Content: ""})

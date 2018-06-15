@@ -1,8 +1,9 @@
 package kftype
 
 type Request struct {
-	Pod string
-	URL string
+	Name string
+	URL  string
+	Rule string
 }
 
 type Response struct {

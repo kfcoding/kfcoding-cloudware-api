@@ -25,10 +25,6 @@ const (
 	RequestTimeout = 10 * time.Second
 )
 
-func GetEtcdEndPoints() []string {
-	return []string{"http://localhost:2379"}
-}
-
 func InitEnv() {
 	if ApiServerAddress = os.Getenv("ApiServerAddress"); "" == ApiServerAddress {
 		ApiServerAddress = "http://api.kfcoding.com"
@@ -55,6 +51,7 @@ func InitEnv() {
 
 	if EtcdEndPoint := os.Getenv("EtcdEndPoints"); "" == EtcdEndPoint {
 		EtcdEndPoints = []string{"http://etcd." + Namespace + ".svc.cluster.local:2379"}
+		//EtcdEndPoints = []string{"http://10.99.139.170:2379"}
 	} else {
 		EtcdEndPoints = strings.Split(EtcdEndPoint, ",")
 	}

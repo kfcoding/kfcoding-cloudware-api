@@ -15,8 +15,6 @@ func main() {
 	go etcd.Watcher()
 	http.Handle("/api/", handler.CreateHTTPAPIHandler(etcd))
 
-	http.Handle("/api/", handler.CreateHTTPAPIHandler(nil))
-
 	log.Println("Start rest server")
 	log.Fatal(http.ListenAndServe(configs.ServerAddress, nil))
 

@@ -68,7 +68,7 @@ func GetMyEtcdClient() *MyEtcdClient {
 
 		var err error
 		ectdClientV3, err := clientv3.New(clientv3.Config{
-			Endpoints:   configs.GetEtcdEndPoints(),
+			Endpoints:   configs.EtcdEndPoints,
 			DialTimeout: configs.RequestTimeout,
 		})
 		if err != nil {
