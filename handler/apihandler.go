@@ -4,21 +4,19 @@ import (
 	"net/http"
 	"github.com/emicklei/go-restful"
 	"github.com/cloudware-controller/kftype"
-	"errors"
-	"github.com/cloudware-controller/etcd"
 	"log"
+	"strings"
+	"github.com/cloudware-controller/configs"
 )
 
 type APIHandler struct {
-	channel    chan *kftype.Request
-	etcdClient *etcd.MyEtcdClient
+	etcdHandler *EtcdHandler
 }
 
-func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
+func CreateHTTPAPIHandler(etcd *EtcdHandler) (http.Handler) {
 
 	apiHandler := APIHandler{
-		channel:    channel,
-		etcdClient: etcd.GetMyEtcdClient(),
+		etcdHandler: etcd,
 	}
 
 	apiV1Ws := new(restful.WebService)
@@ -28,12 +26,12 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 		Produces(restful.MIME_JSON)
 
 	apiV1Ws.Route(
-		apiV1Ws.PUT("/cloudware").
-			To(apiHandler.handleAddIngressRule))
+		apiV1Ws.POST("/cloudware/routing").
+			To(apiHandler.handleAddRouting))
 
 	apiV1Ws.Route(
-		apiV1Ws.DELETE("/cloudware").
-			To(apiHandler.handleDeleteIngressRule))
+		apiV1Ws.DELETE("/cloudware/routing").
+			To(apiHandler.handleDeleteRouting))
 
 	apiV1Ws.Route(
 		apiV1Ws.POST("/cloudware/keepalive").
@@ -54,9 +52,9 @@ func (apiHandler *APIHandler) handleKeepAlive(request *restful.Request, response
 		return
 	}
 
-	log.Print("handleKeepAlive: ", body.Pod)
+	log.Print("handleKeepAlive: ", body)
 
-	err := handleKeepCloudwareAlive(body, apiHandler.etcdClient)
+	err := apiHandler.etcdHandler.handleKeepCloudwareAlive(body)
 
 	if err != nil {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
@@ -66,35 +64,29 @@ func (apiHandler *APIHandler) handleKeepAlive(request *restful.Request, response
 
 }
 
-func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, response *restful.Response) {
+func (apiHandler *APIHandler) handleAddRouting(request *restful.Request, response *restful.Response) {
 
-	if !apiHandler.checkCache(response) {
+	// check token
+	if apiHandler.checkToekn(request, response) == false {
 		return
 	}
 
+	// get body
 	body := &kftype.Request{}
 	if err := request.ReadEntity(body); nil != err {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 		return
 	}
-
-	if body.Namespace == "" || body.Ingress == "" || body.Pod == "" {
+	if body.Pod == "" || body.URL == "" {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
+	log.Print("handleAddRouting: ", body)
 
-	log.Print("handleAddIngressRule: ", body.Pod)
+	// add routing
+	err := apiHandler.etcdHandler.handleAddRouting(body)
 
-	done := make(chan error)
-	body.Option = kftype.IngressRoleAdd
-	body.Done = done
-
-	apiHandler.channel <- body
-
-	err := <-done
-
-	close(done)
-
+	// return
 	if err != nil {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 	} else {
@@ -103,46 +95,40 @@ func (apiHandler *APIHandler) handleAddIngressRule(request *restful.Request, res
 
 }
 
-func (apiHandler *APIHandler) handleDeleteIngressRule(request *restful.Request, response *restful.Response) {
+func (apiHandler *APIHandler) handleDeleteRouting(request *restful.Request, response *restful.Response) {
 
-	if !apiHandler.checkCache(response) {
+	// check token
+	if apiHandler.checkToekn(request, response) == false {
 		return
 	}
 
+	// get body
 	body := &kftype.Request{}
 	if err := request.ReadEntity(body); nil != err {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 		return
 	}
-
-	if body.Namespace == "" || body.Ingress == "" || body.Pod == "" {
+	if body.Pod == "" {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: "Incomplete parameters"})
 		return
 	}
+	log.Print("handleAddRouting: ", body)
 
-	log.Print("handleAddIngressRule: ", body.Pod)
+	// delete routing
+	err := apiHandler.etcdHandler.handleAddRouting(body)
 
-	done := make(chan error)
-	body.Option = kftype.IngressRoleDelete
-	body.Done = done
-
-	apiHandler.channel <- body
-
-	err := <-done
-
-	close(done)
-
+	// return
 	if err != nil {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, kftype.Response{Content: err.Error()})
 	} else {
 		response.WriteHeaderAndEntity(http.StatusOK, kftype.Response{Content: ""})
 	}
-
 }
 
-func (apiHandler *APIHandler) checkCache(response *restful.Response) bool {
-	if cap(apiHandler.channel)-len(apiHandler.channel) <= 0 {
-		response.WriteError(http.StatusInternalServerError, errors.New("The queue is full"))
+func (apiHandler *APIHandler) checkToekn(request *restful.Request, response *restful.Response) bool {
+	token := request.HeaderParameter("Authorization")
+	if strings.Compare(token, configs.Token) != 0 {
+		response.WriteHeaderAndEntity(http.StatusUnauthorized, kftype.Response{Content: ""})
 		return false
 	}
 	return true

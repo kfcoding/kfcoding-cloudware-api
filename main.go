@@ -2,24 +2,22 @@ package main
 
 import (
 	"net/http"
-	"github.com/cloudware-controller/handler"
-	"github.com/cloudware-controller/kftype"
 	"log"
 	"github.com/cloudware-controller/configs"
+	"github.com/cloudware-controller/handler"
 )
 
 func main() {
 
 	configs.InitEnv()
 
-	channel := make(chan *kftype.Request, configs.QueueSize)
+	etcd := handler.GetEtcdHandler()
+	go etcd.Watcher()
+	http.Handle("/api/", handler.CreateHTTPAPIHandler(etcd))
 
-	go handler.StartK8sHandler(channel)
-
-	http.Handle("/api/", handler.CreateHTTPAPIHandler(channel))
+	http.Handle("/api/", handler.CreateHTTPAPIHandler(nil))
 
 	log.Println("Start rest server")
-
 	log.Fatal(http.ListenAndServe(configs.ServerAddress, nil))
 
 }

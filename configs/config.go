@@ -5,22 +5,24 @@ import (
 	"strconv"
 	"log"
 	"time"
+	"strings"
 )
 
 var (
 	ApiServerAddress = "http://api.kfcoding.com"
 	ServerAddress    = "0.0.0.0:8080"
-	PrefixAlive      = "/kfcoding/alpha/cloudware/ttl/"
 	Namespace        = "kfcoding-alpha"
-	IngressName      = "kfcoding-cloudware-ingress"
-	WsAddrSuffix     = ".cloudware.kfcoding.com"
-	QueueSize        = 1000
+	Token            = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
+
+	PrefixAlive   = "/kfcoding/cloudware/ttl/"
+	PrefixTraefik = "/kfcoding/cloudware/traefik/"
+	WsAddrSuffix  = "cloudware.kfcoding.com"
+	EtcdEndPoints = []string{}
+	CloudWareTTL  int64
 )
 
 const (
-	CloudWareTTL    = 60
-	RequestTimeout  = 10 * time.Second
-	EtcdDialTimeout = 5 * time.Second
+	RequestTimeout = 10 * time.Second
 )
 
 func GetEtcdEndPoints() []string {
@@ -28,37 +30,52 @@ func GetEtcdEndPoints() []string {
 }
 
 func InitEnv() {
-	var err error
 	if ApiServerAddress = os.Getenv("ApiServerAddress"); "" == ApiServerAddress {
 		ApiServerAddress = "http://api.kfcoding.com"
 	}
 	if ServerAddress = os.Getenv("ServerAddress"); "" == ServerAddress {
 		ServerAddress = "0.0.0.0:8080"
 	}
-	if PrefixAlive = os.Getenv("PrefixAlive"); "" == PrefixAlive {
-		PrefixAlive = "/kfcoding/alpha/cloudware/ttl/"
-	}
 	if Namespace = os.Getenv("Namespace"); "" == Namespace {
 		Namespace = "kfcoding-alpha"
 	}
-	if IngressName = os.Getenv("IngressName"); "" == IngressName {
-		IngressName = "kfcoding-cloudware-ingress"
-	}
-	if WsAddrSuffix = os.Getenv("WsAddrSuffix"); "" == WsAddrSuffix {
-		WsAddrSuffix = ".cloudware.kfcoding.com"
+	if Token = os.Getenv("Token"); "" == Token {
+		Token = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
 	}
 
-	if t := os.Getenv("QueueSize"); "" != t {
-		if QueueSize, err = strconv.Atoi(t); nil != err {
-			log.Fatal(err)
-		}
+	if PrefixAlive = os.Getenv("PrefixAlive"); "" == PrefixAlive {
+		PrefixAlive = "/kfcoding/cloudware/ttl/"
 	}
-	log.Print(QueueSize)
-	log.Print(ApiServerAddress)
-	log.Print(ServerAddress)
-	log.Print(PrefixAlive)
-	log.Print(Namespace)
-	log.Print(IngressName)
-	log.Print(WsAddrSuffix)
+	if PrefixTraefik = os.Getenv("PrefixTraefik"); "" == PrefixTraefik {
+		PrefixTraefik = "/kfcoding/cloudware/traefik/"
+	}
+	if WsAddrSuffix = os.Getenv("WsAddrSuffix"); "" == WsAddrSuffix {
+		WsAddrSuffix = "cloudware.kfcoding.com"
+	}
+
+	if EtcdEndPoint := os.Getenv("EtcdEndPoints"); "" == EtcdEndPoint {
+		EtcdEndPoints = []string{"http://etcd." + Namespace + ".svc.cluster.local:2379"}
+	} else {
+		EtcdEndPoints = strings.Split(EtcdEndPoint, ",")
+	}
+	if ttl := os.Getenv("CloudWareTTL"); "" != ttl {
+		if t, err := strconv.ParseInt(ttl, 10, 64); nil != err {
+			log.Fatal(err)
+		} else {
+			CloudWareTTL = t
+		}
+	} else {
+		CloudWareTTL = 60
+	}
+
+	log.Print("ApiServerAddress: ", ApiServerAddress)
+	log.Print("ServerAddress: ", ServerAddress)
+	log.Print("Namespace: ", Namespace)
+	log.Print("Token: ", Token)
+	log.Print("PrefixAlive: ", PrefixAlive)
+	log.Print("PrefixTraefik: ", PrefixTraefik)
+	log.Print("WsAddrSuffix: ", WsAddrSuffix)
+	log.Print("EtcdEndPoints: ", EtcdEndPoints)
+	log.Print("CloudWareTTL: ", CloudWareTTL)
 
 }
