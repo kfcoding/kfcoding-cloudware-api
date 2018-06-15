@@ -1,5 +1,6 @@
 FROM ubuntu
-Maintainer "wsl <wsl@kfcoding.com>"
+
+MAINTAINER "wsl <wsl@kfcoding.com>"
 
 ADD ./KfcodingIngressController /usr/bin/
 

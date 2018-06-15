@@ -2,10 +2,10 @@ package main
 
 import (
 	"net/http"
-	"github.com/kfcoding-ingress-controller/handler"
-	"github.com/kfcoding-ingress-controller/kftype"
+	"github.com/cloudware-controller/handler"
+	"github.com/cloudware-controller/kftype"
 	"log"
-	"github.com/kfcoding-ingress-controller/configs"
+	"github.com/cloudware-controller/configs"
 )
 
 func main() {

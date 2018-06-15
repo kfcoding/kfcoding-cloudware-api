@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 	"github.com/emicklei/go-restful"
-	"github.com/kfcoding-ingress-controller/kftype"
+	"github.com/cloudware-controller/kftype"
 	"errors"
-	"github.com/kfcoding-ingress-controller/etcd"
+	"github.com/cloudware-controller/etcd"
 	"log"
 )
 
@@ -36,7 +36,7 @@ func CreateHTTPAPIHandler(channel chan *kftype.Request) (http.Handler) {
 			To(apiHandler.handleDeleteIngressRule))
 
 	apiV1Ws.Route(
-		apiV1Ws.PUT("/cloudware/keepalive").
+		apiV1Ws.POST("/cloudware/keepalive").
 			To(apiHandler.handleKeepAlive))
 
 	wsContainer := restful.NewContainer()
