@@ -9,6 +9,11 @@ import (
 )
 
 var (
+	/* for keep alive */
+	KeeperPrefix  = "/kfcoding"
+	TypeCloudware = 1
+	KeeperTTL     = 180
+
 	ApiServerAddress = "http://api.kfcoding.com"
 	ServerAddress    = "0.0.0.0:8080"
 	Namespace        = "kfcoding-alpha"
