@@ -85,12 +85,14 @@ func (service *CloudwareK8sService) CreateCloudwareService(name string) (*v12.Se
 	serviceBody.Labels["app"] = name
 	serviceBody.Spec.Selector["app"] = name
 
+	v1Service, err := service.ServiceInterface.Create(&serviceBody)
+
 	if nil != err {
 		log.Print("CreateCloudwareService error: ", err)
 		return nil, err
 	} else {
 		log.Printf("CreateCloudwareService ok")
-		return &serviceBody, nil
+		return v1Service, nil
 	}
 }
 
@@ -122,7 +124,6 @@ func (service *CloudwareK8sService) CreateCloudwarePod(body *types.CloudwareBody
 func (service *CloudwareK8sService) DeleteCloudwareService(name string) (string, error) {
 
 	racePeriodSeconds := int64(0)
-	orphanDependents := false
 	var propagationPolicy v13.DeletionPropagation
 	propagationPolicy = "Background"
 
@@ -132,7 +133,6 @@ func (service *CloudwareK8sService) DeleteCloudwareService(name string) (string,
 			APIVersion: "v1",
 		},
 		GracePeriodSeconds: &racePeriodSeconds,
-		OrphanDependents:   &orphanDependents,
 		PropagationPolicy:  &propagationPolicy,
 	}
 	err := service.ServiceInterface.Delete(name, options)
@@ -149,7 +149,6 @@ func (service *CloudwareK8sService) DeleteCloudwareService(name string) (string,
 func (service *CloudwareK8sService) DeleteCloudwarePod(name string) (string, error) {
 
 	racePeriodSeconds := int64(0)
-	orphanDependents := false
 	var propagationPolicy v13.DeletionPropagation
 	propagationPolicy = "Background"
 
@@ -159,16 +158,15 @@ func (service *CloudwareK8sService) DeleteCloudwarePod(name string) (string, err
 			APIVersion: "v1",
 		},
 		GracePeriodSeconds: &racePeriodSeconds,
-		OrphanDependents:   &orphanDependents,
 		PropagationPolicy:  &propagationPolicy,
 	}
 	err := service.PodInterface.Delete(name, options)
 
 	if nil != err {
-		log.Print("DeleteCloudwareService error: ", err)
+		log.Print("DeleteCloudwarePod error: ", err)
 		return "", err
 	} else {
-		log.Printf("DeleteCloudwareService ok")
+		log.Printf("DeleteCloudwarePod ok")
 		return "", nil
 	}
 }
