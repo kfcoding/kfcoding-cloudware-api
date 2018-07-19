@@ -1,14 +1,10 @@
 ## 云件控制器
 
-1. 提供云件转发规则的增加及删除接口（直接修改traefik监听的etcd）
+1. build
 
-2. 云件保活，并在云件超时后调用restapi删除云件
+```
+go build -o controller main.go
 
-
-POST    /api/cloudware/routing
-DELETE  /api/cloudware/routing
-
-POST    /api/traefik/routings
-DELETE  /api/traefik/routings
-
-POST    /api/cloudware/keepalive
+build using docker golang
+docker run -it -v /Users/wsl/go/src:/go/src golang:1.10.3-alpine3.8 sh
+```
