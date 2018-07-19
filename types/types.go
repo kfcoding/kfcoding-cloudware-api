@@ -1,6 +1,12 @@
 package types
 
-type RequestBody struct {
+//type RequestBody struct {
+//	Name string
+//	URL  string
+//	Rule string
+//}
+
+type RoutingBody struct {
 	Name string
 	URL  string
 	Rule string

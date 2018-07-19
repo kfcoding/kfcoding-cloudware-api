@@ -1,11 +1,13 @@
 package service
 
+import "github.com/cloudware-controller/types"
+
 type RoutingService interface {
-	AddRule()
+	AddRule(*types.RoutingBody) error
 
-	AddRules()
+	AddRules([]interface{}) error
 
-	DeleteRule()
+	DeleteRule(*types.RoutingBody) error
 
-	DeleteRules()
+	DeleteRules([]interface{}) error
 }

@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"github.com/emicklei/go-restful"
 	"github.com/cloudware-controller/service"
+	"github.com/go-simplejson"
+	"github.com/cloudware-controller/types"
+	"log"
 )
 
 type RoutingController struct {
@@ -46,17 +49,90 @@ func CreateRoutingController(routingService service.RoutingService) (http.Handle
 }
 
 func (controller *RoutingController) handleAddRouting(request *restful.Request, response *restful.Response) {
+	body := &types.RoutingBody{}
+	if err := request.ReadEntity(body); nil != err {
+		log.Print("handleAddRouting error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
+		return
+	}
+	log.Print("handleAddRouting: ", body)
 
+	err := controller.routingService.AddRule(body)
+
+	if err != nil {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Error: err.Error()})
+	} else {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: "ok"})
+	}
 }
 
 func (controller *RoutingController) handleAddRoutings(request *restful.Request, response *restful.Response) {
+	// get body
+	json := &simplejson.Json{}
+	if err := request.ReadEntity(json); nil != err {
+		log.Print("handleAddRoutings error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Data: err.Error()})
+		return
+	}
+	rules, err := json.Get("rules").Array()
+	if nil != err {
+		log.Print("handleAddRoutings error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Data: err.Error()})
+		return
+	}
+	log.Print("handleAddRoutings: ", json)
+
+	err = controller.routingService.AddRules(rules)
+
+	if err != nil {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Error: err.Error()})
+	} else {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: "ok"})
+	}
 
 }
 
 func (controller *RoutingController) handleDeleteRouting(request *restful.Request, response *restful.Response) {
+	body := &types.RoutingBody{}
+	if err := request.ReadEntity(body); nil != err {
+		log.Print("handleAddRouting error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
+		return
+	}
+	log.Print("handleAddRouting: ", body)
 
+	err := controller.routingService.AddRule(body)
+
+	if err != nil {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Error: err.Error()})
+	} else {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: "ok"})
+	}
 }
 
 func (controller *RoutingController) handleDeleteRoutings(request *restful.Request, response *restful.Response) {
+	// get body
+	json := &simplejson.Json{}
+	if err := request.ReadEntity(json); nil != err {
+		log.Print("handleAddRoutings error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Data: err.Error()})
+		return
+	}
+	rules, err := json.Get("rules").Array()
+	if nil != err {
+		log.Print("handleAddRoutings error: ", err)
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Data: err.Error()})
+		return
+	}
+	log.Print("handleAddRoutings: ", json)
+
+	err = controller.routingService.DeleteRules(rules)
+
+	// return
+	if err != nil {
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
+	} else {
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: "ok"})
+	}
 
 }
