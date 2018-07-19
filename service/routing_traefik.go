@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/cloudware-controller/etcd"
-	"github.com/cloudware-controller/types"
+	"github.com/kfcoding-cloudware-controller/etcd"
+	"github.com/kfcoding-cloudware-controller/types"
 	"log"
-	"github.com/cloudware-controller/configs"
+	"github.com/kfcoding-cloudware-controller/configs"
 	"path"
 	"context"
 )

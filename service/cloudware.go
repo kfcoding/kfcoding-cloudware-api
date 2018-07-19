@@ -1,6 +1,6 @@
 package service
 
-import "github.com/cloudware-controller/types"
+import "github.com/kfcoding-cloudware-controller/types"
 
 type CloudwareService interface {
 	CreateCloudwareApi(body *types.CloudwareBody) (string, error)

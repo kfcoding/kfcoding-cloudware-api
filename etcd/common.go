@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"log"
 	"sync"
-	"github.com/cloudware-controller/configs"
+	"github.com/kfcoding-cloudware-controller/configs"
 )
 
 type MyEtcdClient struct {

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/cloudware-controller/types"
+	"github.com/kfcoding-cloudware-controller/types"
 	"log"
-	"github.com/cloudware-controller/template"
-	"github.com/cloudware-controller/configs"
+	"github.com/kfcoding-cloudware-controller/template"
+	"github.com/kfcoding-cloudware-controller/configs"
 	"github.com/satori/go.uuid"
 	"encoding/json"
 	"k8s.io/client-go/rest"

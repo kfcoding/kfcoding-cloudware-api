@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 	"log"
-	"github.com/cloudware-controller/configs"
-	"github.com/cloudware-controller/apihandler"
-	"github.com/cloudware-controller/service"
-	"github.com/cloudware-controller/etcd"
+	"github.com/kfcoding-cloudware-controller/configs"
+	"github.com/kfcoding-cloudware-controller/apihandler"
+	"github.com/kfcoding-cloudware-controller/service"
+	"github.com/kfcoding-cloudware-controller/etcd"
 )
 
 func main() {

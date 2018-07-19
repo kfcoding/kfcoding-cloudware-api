@@ -1,12 +1,12 @@
 package service
 
 import (
-	"github.com/cloudware-controller/etcd"
+	"github.com/kfcoding-cloudware-controller/etcd"
 	"log"
 	"github.com/coreos/etcd/clientv3"
 	"strings"
 	"context"
-	"github.com/cloudware-controller/types"
+	"github.com/kfcoding-cloudware-controller/types"
 )
 
 type EtcdWatcher struct {
