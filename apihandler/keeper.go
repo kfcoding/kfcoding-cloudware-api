@@ -19,11 +19,9 @@ func CreateKeeperController(keeperService service.KeeperService) (http.Handler) 
 	}
 
 	apiV1Ws := new(restful.WebService)
-
 	apiV1Ws.Path("/keep/").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
-
 	apiV1Ws.Route(
 		apiV1Ws.POST("/cloudware").
 			To(keeperController.handleKeepAlive))
@@ -36,10 +34,9 @@ func CreateKeeperController(keeperService service.KeeperService) (http.Handler) 
 }
 
 func (controller *KeeperController) handleKeepAlive(request *restful.Request, response *restful.Response) {
-
 	body := &types.KeeperBody{}
 	if err := request.ReadEntity(body); nil != err {
-		log.Print("handleKeepAlive: ", err)
+		log.Print("handleKeepAlive error: ", err)
 		response.WriteHeaderAndEntity(
 			http.StatusInternalServerError,
 			types.ResponseBody{Error: err.Error()})
@@ -47,8 +44,11 @@ func (controller *KeeperController) handleKeepAlive(request *restful.Request, re
 	}
 	log.Print("handleKeepAlive: ", body)
 
+	if !controller.keeperService.Check(body) {
+		log.Print("Keep ok, " + body.Name + " not exist")
+		return
+	}
+
 	controller.keeperService.Keep(body)
-
 	response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{})
-
 }

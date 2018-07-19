@@ -2,39 +2,87 @@ package configs
 
 import (
 	"os"
-	"strconv"
 	"log"
 	"time"
+	"strconv"
 	"strings"
-)
-
-var (
-	/* for keep alive */
-	KeeperPrefix  = "/kfcoding"
-	TypeCloudware = 1
-	KeeperTTL     = 180
-
-	ApiServerAddress = "http://api.kfcoding.com"
-	ServerAddress    = "0.0.0.0:8080"
-	Namespace        = "kfcoding-alpha"
-	Token            = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
-
-	PrefixAlive   = "/kfcoding/cloudware/ttl/"
-	PrefixTraefik = "/kfcoding/cloudware/traefik/"
-	WsAddrSuffix  = "cloudware.kfcoding.com"
-	EtcdEndPoints = []string{}
-	CloudWareTTL  int64
 )
 
 const (
 	RequestTimeout = 10 * time.Second
 )
 
+var (
+	Namespace     = "kfcoding-alpha"
+	ServerAddress = "0.0.0.0:8080"
+	Token         = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
+)
+/* for keep alive */
+var KeeperTTL int64 // 保活时间
+var (
+	KeeperPrefix  = "/kfcoding" // 保活前缀
+	TypeCloudware = "1"         // 云件类型
+	Version       = "v1"        // 版本
+	EtcdEndPoints = []string{"http://localhost:2379"}  // etcd地址, split by ,
+)
+/* for routing */
+var (
+	PrefixTraefik = "/kfcoding/traefik/"
+	WsAddrSuffix  = "cloudware.kfcoding.com"
+)
+
 func InitEnv() {
-	if ApiServerAddress = os.Getenv("ApiServerAddress"); "" == ApiServerAddress {
-		ApiServerAddress = "http://api.kfcoding.com"
+
+	if namespace := os.Getenv("Namespace"); namespace != "" {
+		Namespace = namespace
 	}
-	if ServerAddress = os.Getenv("ServerAddress"); "" == ServerAddress {
+	if serverAddress := os.Getenv("ServerAddress"); serverAddress != "" {
+		ServerAddress = serverAddress
+	}
+	if token := os.Getenv("Token"); token != "" {
+		Token = token
+	}
+
+	/* for keep alive */
+	if ttl := os.Getenv("KeeperTTL"); "" != ttl {
+		if t, err := strconv.ParseInt(ttl, 10, 64); nil != err {
+			log.Fatal(err)
+		} else {
+			KeeperTTL = t
+		}
+	} else {
+		KeeperTTL = 10
+	}
+	if keeperPrefix := os.Getenv("KeeperPrefix"); keeperPrefix != "" {
+		KeeperPrefix = keeperPrefix
+	}
+	if typeCloudware := os.Getenv("TypeCloudware"); typeCloudware != "" {
+		TypeCloudware = typeCloudware
+	}
+	if etcdEndPoint := os.Getenv("EtcdEndPoints"); "" != etcdEndPoint {
+		EtcdEndPoints = strings.Split(etcdEndPoint, ",")
+	}
+	/*for routing*/
+	if prefixTraefik := os.Getenv("PrefixTraefik"); prefixTraefik != "" {
+		PrefixTraefik = prefixTraefik
+	}
+	if wsAddrSuffix := os.Getenv("WsAddrSuffix"); wsAddrSuffix != "" {
+		WsAddrSuffix = wsAddrSuffix
+	}
+
+	log.Print("ServerAddress: ", ServerAddress)
+	log.Print("Namespace: ", Namespace)
+	log.Print("Token: ", Token)
+	log.Print("KeeperTTL: ", KeeperTTL)
+	log.Print("KeeperPrefix: ", KeeperPrefix)
+	log.Print("TypeCloudware: ", TypeCloudware)
+	log.Print("Version: ", Version)
+	log.Print("EtcdEndPoints: ", EtcdEndPoints)
+	log.Print("PrefixTraefik: ", PrefixTraefik)
+	log.Print("WsAddrSuffix: ", WsAddrSuffix)
+
+	/*
+	if ServerAddress =; "" == ServerAddress {
 		ServerAddress = "0.0.0.0:8080"
 	}
 	if Namespace = os.Getenv("Namespace"); "" == Namespace {
@@ -44,9 +92,6 @@ func InitEnv() {
 		Token = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
 	}
 
-	if PrefixAlive = os.Getenv("PrefixAlive"); "" == PrefixAlive {
-		PrefixAlive = "/kfcoding/cloudware/ttl/"
-	}
 	if PrefixTraefik = os.Getenv("PrefixTraefik"); "" == PrefixTraefik {
 		PrefixTraefik = "/kfcoding/cloudware/traefik/"
 	}
@@ -55,7 +100,7 @@ func InitEnv() {
 	}
 
 	if EtcdEndPoint := os.Getenv("EtcdEndPoints"); "" == EtcdEndPoint {
-		EtcdEndPoints = []string{"http://etcd." + Namespace + ".svc.cluster.local:2379"}
+		EtcdEndPoints = []string{"http://localhost:2379"}
 		//EtcdEndPoints = []string{"http://10.99.139.170:2379"}
 	} else {
 		EtcdEndPoints = strings.Split(EtcdEndPoint, ",")
@@ -69,15 +114,6 @@ func InitEnv() {
 	} else {
 		CloudWareTTL = 60
 	}
-
-	log.Print("ApiServerAddress: ", ApiServerAddress)
-	log.Print("ServerAddress: ", ServerAddress)
-	log.Print("Namespace: ", Namespace)
-	log.Print("Token: ", Token)
-	log.Print("PrefixAlive: ", PrefixAlive)
-	log.Print("PrefixTraefik: ", PrefixTraefik)
-	log.Print("WsAddrSuffix: ", WsAddrSuffix)
-	log.Print("EtcdEndPoints: ", EtcdEndPoints)
-	log.Print("CloudWareTTL: ", CloudWareTTL)
+	*/
 
 }

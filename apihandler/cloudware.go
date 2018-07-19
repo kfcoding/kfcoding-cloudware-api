@@ -19,11 +19,9 @@ func CreateCloudwareController(cloudwareService service.CloudwareService) (http.
 	}
 
 	apiV1Ws := new(restful.WebService)
-
-	apiV1Ws.Path("/cloudware/").
+	apiV1Ws.Path("/cloudware").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
-
 	apiV1Ws.Route(
 		apiV1Ws.POST("/").
 			To(cloudwareController.handleCreateCloudware))
@@ -38,7 +36,7 @@ func CreateCloudwareController(cloudwareService service.CloudwareService) (http.
 func (controller *CloudwareController) handleCreateCloudware(request *restful.Request, response *restful.Response) {
 	body := &types.CloudwareBody{}
 	if err := request.ReadEntity(body); nil != err {
-		log.Print("handleCreateCloudware: ", err)
+		log.Print("handleCreateCloudware error: ", err)
 		response.WriteHeaderAndEntity(
 			http.StatusInternalServerError,
 			types.ResponseBody{Error: err.Error()})
@@ -51,7 +49,6 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 	if err == nil {
 		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: data})
 	} else {
-		log.Print("handleCreateCloudware: ", err)
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
 	}
 }

@@ -6,9 +6,9 @@ type RoutingTraefikService struct {
 	etcdClient *etcd.MyEtcdClient
 }
 
-func GetRoutingTraefikService() *RoutingTraefikService {
+func GetRoutingTraefikService(etcdClient *etcd.MyEtcdClient) *RoutingTraefikService {
 	return &RoutingTraefikService{
-		etcdClient: etcd.GetMyEtcdClient(),
+		etcdClient: etcdClient,
 	}
 }
 

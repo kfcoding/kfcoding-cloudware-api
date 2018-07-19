@@ -6,19 +6,23 @@ import (
 	"github.com/cloudware-controller/configs"
 	"github.com/cloudware-controller/apihandler"
 	"github.com/cloudware-controller/service"
+	"github.com/cloudware-controller/etcd"
 )
 
 func main() {
 
 	configs.InitEnv()
 
-	keeperService := service.GetKeeperEtcdService()
-	http.Handle("/keep/", apihandler.CreateKeeperController(keeperService))
-
-	routingService := service.GetRoutingTraefikService()
-	http.Handle("/routing/", apihandler.CreateRoutingController(routingService))
-
+	etcdClient := etcd.GetMyEtcdClient()
+	keeperService := service.GetKeeperEtcdService(etcdClient)
+	routingService := service.GetRoutingTraefikService(etcdClient)
 	cloudwareService := service.GetCloudwareK8sService(keeperService, routingService)
+
+	watcher := service.GetEtcdWatcher(etcdClient)
+	go watcher.Watcher(configs.KeeperPrefix, cloudwareService)
+
+	http.Handle("/keep/", apihandler.CreateKeeperController(keeperService))
+	http.Handle("/routing/", apihandler.CreateRoutingController(routingService))
 	http.Handle("/cloudware/", apihandler.CreateCloudwareController(cloudwareService))
 
 	log.Println("Start rest server")
