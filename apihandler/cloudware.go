@@ -42,7 +42,7 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 			types.ResponseBody{Error: err.Error()})
 		return
 	}
-	log.Print("handleCreateCloudware: ", body)
+	log.Printf("handleCreateCloudware: %+v\n", body)
 
 	data, err := controller.cloudwareService.CreateCloudwareApi(body)
 

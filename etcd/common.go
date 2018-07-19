@@ -67,10 +67,21 @@ func GetMyEtcdClient() *MyEtcdClient {
 	once.Do(func() {
 
 		var err error
-		ectdClientV3, err := clientv3.New(clientv3.Config{
-			Endpoints:   configs.EtcdEndPoints,
-			DialTimeout: configs.RequestTimeout,
-		})
+		var config clientv3.Config
+		if configs.EtcdUsername != "" {
+			config = clientv3.Config{
+				Endpoints:   configs.EtcdEndPoints,
+				DialTimeout: configs.RequestTimeout,
+				Username:    configs.EtcdUsername,
+				Password:    configs.EtcdPassword,
+			}
+		} else {
+			config = clientv3.Config{
+				Endpoints:   configs.EtcdEndPoints,
+				DialTimeout: configs.RequestTimeout,
+			}
+		}
+		ectdClientV3, err := clientv3.New(config)
 		if err != nil {
 			log.Fatal("Error: new common client error:", err)
 		}

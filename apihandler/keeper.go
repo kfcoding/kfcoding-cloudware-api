@@ -36,13 +36,13 @@ func CreateKeeperController(keeperService service.KeeperService) (http.Handler) 
 func (controller *KeeperController) handleKeepAlive(request *restful.Request, response *restful.Response) {
 	body := &types.KeeperBody{}
 	if err := request.ReadEntity(body); nil != err {
-		log.Print("handleKeepAlive error: ", err)
+		log.Printf("handleKeepAlive error: %+v\n", err)
 		response.WriteHeaderAndEntity(
 			http.StatusInternalServerError,
 			types.ResponseBody{Error: err.Error()})
 		return
 	}
-	log.Print("handleKeepAlive: ", body)
+	log.Printf("handleKeepAlive: %+v\n", body)
 
 	if !controller.keeperService.Check(body) {
 		log.Print("Keep ok, " + body.Name + " not exist")

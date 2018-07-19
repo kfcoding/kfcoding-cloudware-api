@@ -30,6 +30,7 @@ func (watcher *EtcdWatcher) Watcher(prefix string, service CloudwareService) {
 			// /kfcoding/v1/1/cloduware-321dsnaknfkdsnjf9afndks
 			switch ev.Type {
 			case 1: //DELETE
+				log.Print("listen etcd delete: ", string(ev.Kv.Key))
 				strs := strings.Split(string(ev.Kv.Key), "/")
 				body := &types.KeeperBody{Name: strs[len(strs)-1]}
 				service.WatcherCallback(body)

@@ -3,29 +3,32 @@ package configs
 import (
 	"os"
 	"log"
-	"time"
-	"strconv"
 	"strings"
-)
-
-const (
-	RequestTimeout = 10 * time.Second
+	"strconv"
+	"time"
 )
 
 var (
 	Namespace     = "kfcoding-alpha"
 	ServerAddress = "0.0.0.0:8080"
-	Token         = "Bearer ad3efe453a786f036a946015feff19f78a80192f462ea1d56e3d89e8c4f5d833"
+	Token         = "kfcoding"
 )
-/* for keep alive */
-var KeeperTTL int64 // 保活时间
+/**************** etcd config *************************************/
 var (
-	KeeperPrefix  = "/kfcoding" // 保活前缀
-	TypeCloudware = "1"         // 云件类型
-	Version       = "v1"        // 版本
-	EtcdEndPoints = []string{"http://localhost:2379"}  // etcd地址, split by ,
+	EtcdEndPoints  = []string{"http://localhost:2379"}
+	EtcdUsername   = ""
+	EtcdPassword   = ""
+	RequestTimeout = 10 * time.Second
 )
-/* for routing */
+/**************** keep alive  *************************************/
+/**************** KeeperPrefix/Version/TypeCloudware/name *********/
+var KeeperTTL int64 = 60 // 保活时间
+var (
+	KeeperPrefix  = "/kfcoding/keepalive" // 保活前缀
+	TypeCloudware = "1"                   // 云件类型
+	Version       = "v1"                  // 版本
+)
+/**************** routing config **********************************/
 var (
 	PrefixTraefik = "/kfcoding/traefik/"
 	WsAddrSuffix  = "cloudware.kfcoding.com"
@@ -43,15 +46,24 @@ func InitEnv() {
 		Token = token
 	}
 
-	/* for keep alive */
+	/************************* etcd config ******************************/
+	if etcdEndPoint := os.Getenv("EtcdEndPoints"); "" != etcdEndPoint {
+		EtcdEndPoints = strings.Split(etcdEndPoint, ",")
+	}
+	if etcdUsername := os.Getenv("EtcdUsername"); "" != etcdUsername {
+		EtcdUsername = etcdUsername
+	}
+	if etcdPassword := os.Getenv("EtcdPassword"); "" != etcdPassword {
+		EtcdPassword = etcdPassword
+	}
+
+	/************************* keep alive config ************************/
 	if ttl := os.Getenv("KeeperTTL"); "" != ttl {
 		if t, err := strconv.ParseInt(ttl, 10, 64); nil != err {
 			log.Fatal(err)
 		} else {
 			KeeperTTL = t
 		}
-	} else {
-		KeeperTTL = 10
 	}
 	if keeperPrefix := os.Getenv("KeeperPrefix"); keeperPrefix != "" {
 		KeeperPrefix = keeperPrefix
@@ -59,10 +71,8 @@ func InitEnv() {
 	if typeCloudware := os.Getenv("TypeCloudware"); typeCloudware != "" {
 		TypeCloudware = typeCloudware
 	}
-	if etcdEndPoint := os.Getenv("EtcdEndPoints"); "" != etcdEndPoint {
-		EtcdEndPoints = strings.Split(etcdEndPoint, ",")
-	}
-	/*for routing*/
+
+	/*************************  routing config **************************/
 	if prefixTraefik := os.Getenv("PrefixTraefik"); prefixTraefik != "" {
 		PrefixTraefik = prefixTraefik
 	}
@@ -70,16 +80,16 @@ func InitEnv() {
 		WsAddrSuffix = wsAddrSuffix
 	}
 
-	log.Print("ServerAddress: ", ServerAddress)
-	log.Print("Namespace: ", Namespace)
-	log.Print("Token: ", Token)
-	log.Print("KeeperTTL: ", KeeperTTL)
-	log.Print("KeeperPrefix: ", KeeperPrefix)
-	log.Print("TypeCloudware: ", TypeCloudware)
-	log.Print("Version: ", Version)
-	log.Print("EtcdEndPoints: ", EtcdEndPoints)
-	log.Print("PrefixTraefik: ", PrefixTraefik)
-	log.Print("WsAddrSuffix: ", WsAddrSuffix)
+	log.Print("ServerAddress:  ", ServerAddress)
+	log.Print("Namespace:      ", Namespace)
+	log.Print("Token:          ", Token)
+	log.Print("KeeperTTL:      ", KeeperTTL)
+	log.Print("KeeperPrefix:   ", KeeperPrefix)
+	log.Print("TypeCloudware:  ", TypeCloudware)
+	log.Print("Version:        ", Version)
+	log.Print("EtcdEndPoints:  ", EtcdEndPoints)
+	log.Print("PrefixTraefik:  ", PrefixTraefik)
+	log.Print("WsAddrSuffix:   ", WsAddrSuffix)
 
 	/*
 	if ServerAddress =; "" == ServerAddress {

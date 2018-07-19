@@ -33,13 +33,15 @@ func GetCloudwareK8sService(keeper KeeperService, routing RoutingService) *Cloud
 }
 
 func (service *CloudwareK8sService) WatcherCallback(body *types.KeeperBody) {
-	log.Print("WatcherCallback: ", body)
+	log.Printf("WatcherCallback: %+v\n", body)
 
 	service.DeleteCloudwareService(body.Name)
 
 	service.DeleteCloudwarePod(body.Name)
 
-	log.Print("WatcherCallback ok: ", body)
+	service.Routing.DeleteRule(&types.RoutingBody{Name: body.Name})
+
+	log.Printf("WatcherCallback ok: %+v\n", body)
 }
 
 func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody) (string, error) {
@@ -47,20 +49,26 @@ func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody
 	if nil != err {
 		return "", err
 	}
-	data, err := service.CreateCloudwareService(name)
+	v1Service, err := service.CreateCloudwareService(name)
 	if nil != err {
-		return data, err
+		return "", err
 	}
 	service.Keeper.Keep(&types.KeeperBody{Name: name})
-	return data, nil
+	wsAddr := name + "." + configs.WsAddrSuffix
+	service.Routing.AddRule(&types.RoutingBody{
+		Name: name,
+		URL:  "http://" + v1Service.Spec.ClusterIP + ":9800",
+		Rule: "Host: " + wsAddr,
+	})
+	return wsAddr, nil
 }
 
-func (service *CloudwareK8sService) CreateCloudwareService(name string) (string, error) {
+func (service *CloudwareK8sService) CreateCloudwareService(name string) (*client.V1Service, error) {
 	var serviceBody client.V1Service
 	err := json.Unmarshal([]byte(template.CloudwareService), &serviceBody)
 	if nil != err {
 		log.Print("CreateCloudwareService error: ", err)
-		return "", err
+		return nil, err
 	}
 	serviceBody.Metadata.Name = name
 	serviceBody.Metadata.Namespace = configs.Namespace
@@ -73,10 +81,10 @@ func (service *CloudwareK8sService) CreateCloudwareService(name string) (string,
 
 	if nil != err {
 		log.Print("CreateCloudwareService error: ", err)
-		return "", err
+		return nil, err
 	} else {
-		log.Print("CreateCloudwareService ok: ", v1Service)
-		return name + "." + configs.WsAddrSuffix, nil
+		log.Printf("CreateCloudwareService ok: %+v\n", v1Service)
+		return &v1Service, nil
 	}
 }
 
@@ -84,7 +92,7 @@ func (service *CloudwareK8sService) CreateCloudwarePod(body *types.CloudwareBody
 	var podBody client.V1Pod
 	err := json.Unmarshal([]byte(template.CloudwarePod), &podBody)
 	if nil != err {
-		log.Print("CreateCloudwarePod error ", err)
+		log.Print("CreateCloudwarePod error: ", err)
 		return "", err
 	}
 	var name = "cloudware-" + uuid.Must(uuid.NewV4()).String()
@@ -98,10 +106,10 @@ func (service *CloudwareK8sService) CreateCloudwarePod(body *types.CloudwareBody
 		podBody, nil)
 
 	if nil != err {
-		log.Print("CreateCloudwarePod error ", err)
+		log.Print("CreateCloudwarePod error: ", err)
 		return "", err
 	} else {
-		log.Print("CreateCloudwarePod ok: ", pod)
+		log.Printf("CreateCloudwarePod ok: %+v\n", pod)
 		return name, nil
 	}
 
@@ -125,7 +133,7 @@ func (service *CloudwareK8sService) DeleteCloudwareService(serviceName string) (
 		log.Print("DeleteCloudwareService error: ", err)
 		return "", err
 	} else {
-		log.Print("DeleteCloudwareService ok: ", res)
+		log.Printf("DeleteCloudwareService ok: %+v\n", res)
 		return "", nil
 	}
 }
@@ -144,7 +152,7 @@ func (service *CloudwareK8sService) DeleteCloudwarePod(podName string) (string, 
 		},
 		nil)
 
-	log.Print("DeleteCloudwarePod ok: ", res, err)
+	log.Printf("DeleteCloudwarePod ok: %+v %+v\n", res, err)
 	return "", err
 
 }

@@ -21,7 +21,7 @@ func GetKeeperEtcdService(etcdClient *etcd.MyEtcdClient) *KeeperEtcdService {
 }
 
 func (keeper *KeeperEtcdService) Keep(body *types.KeeperBody) {
-	log.Print("Keep: ", body)
+	log.Printf("Keep: %+v\n", body)
 
 	var resp *clientv3.LeaseGrantResponse
 	var err error
