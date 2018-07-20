@@ -6,6 +6,8 @@ import (
 	"github.com/kfcoding-cloudware-controller/service"
 	"github.com/kfcoding-cloudware-controller/types"
 	"log"
+	"strings"
+	"github.com/kfcoding-cloudware-controller/configs"
 )
 
 type CloudwareController struct {
@@ -34,6 +36,9 @@ func CreateCloudwareController(cloudwareService service.CloudwareService) (http.
 }
 
 func (controller *CloudwareController) handleCreateCloudware(request *restful.Request, response *restful.Response) {
+	if !controller.checkToken(request, response) {
+		return
+	}
 	body := &types.CloudwareBody{}
 	if err := request.ReadEntity(body); nil != err {
 		log.Print("handleCreateCloudware error: ", err)
@@ -54,4 +59,14 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 	} else {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
 	}
+}
+
+func (controller *CloudwareController) checkToken(request *restful.Request, response *restful.Response) bool {
+	token := request.HeaderParameter("Token")
+	if strings.Compare(token, configs.Token) != 0 {
+		log.Print("认证失败")
+		response.WriteHeaderAndEntity(http.StatusUnauthorized, types.ResponseBody{Error: "认证失败"})
+		return false
+	}
+	return true
 }
