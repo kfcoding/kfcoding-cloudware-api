@@ -37,9 +37,12 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 	body := &types.CloudwareBody{}
 	if err := request.ReadEntity(body); nil != err {
 		log.Print("handleCreateCloudware error: ", err)
-		response.WriteHeaderAndEntity(
-			http.StatusInternalServerError,
-			types.ResponseBody{Error: err.Error()})
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
+		return
+	}
+	if body.Image == "" {
+		log.Print("handleCreateCloudware error: Image 不能为空")
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: "Image 不能为空"})
 		return
 	}
 	log.Printf("handleCreateCloudware: %+v\n", body)

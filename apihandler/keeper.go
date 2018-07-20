@@ -42,6 +42,11 @@ func (controller *KeeperController) handleKeepAlive(request *restful.Request, re
 			types.ResponseBody{Error: err.Error()})
 		return
 	}
+	if body.Name == "" {
+		log.Print("handleKeepAlive error: Name 不能为空")
+		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: "Name 不能为空"})
+		return
+	}
 	log.Printf("handleKeepAlive: %+v\n", body)
 
 	if !controller.keeperService.Check(body) {

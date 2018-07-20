@@ -56,10 +56,13 @@ func (service *CloudwareK8sService) WatcherCallback(body *types.KeeperBody) {
 func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody) (string, error) {
 	name, err := service.CreateCloudwarePod(body)
 	if nil != err {
+		service.DeleteCloudwarePod(name)
 		return "", err
 	}
 	v1Service, err := service.CreateCloudwareService(name)
 	if nil != err {
+		service.DeleteCloudwarePod(name)
+		service.DeleteCloudwareService(name)
 		return "", err
 	}
 	service.Keeper.Keep(&types.KeeperBody{Name: name})

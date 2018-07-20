@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/cloudware-controller.iml" filepath="$PROJECT_DIR$/.idea/cloudware-controller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/kfcoding-cloudware-controller.iml" filepath="$PROJECT_DIR$/.idea/kfcoding-cloudware-controller.iml" />
     </modules>
   </component>
 </project>
