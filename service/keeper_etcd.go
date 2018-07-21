@@ -26,12 +26,12 @@ func (keeper *KeeperEtcdService) Keep(body *types.KeeperBody) {
 	var resp *clientv3.LeaseGrantResponse
 	var err error
 	if resp, err = keeper.etcdClient.EctdClientV3.Grant(
-		context.TODO(), configs.KeeperTTL); err != nil {
+		context.TODO(), int64(configs.KeeperTTL)); err != nil {
 		log.Println("Keep error: ", err)
 		return
 	}
 
-	key := path.Join(configs.KeeperPrefix, configs.Version, configs.TypeCloudware, body.Name)
+	key := path.Join(configs.KeeperPrefix, configs.Version, body.Name)
 	if _, err = keeper.etcdClient.EctdClientV3.Put(
 		context.TODO(), key, "",
 		clientv3.WithLease(resp.ID)); nil != err {
@@ -46,6 +46,6 @@ func (keeper *KeeperEtcdService) Remove(body *types.KeeperBody) {
 }
 
 func (keeper *KeeperEtcdService) Check(body *types.KeeperBody) bool {
-	key := path.Join(configs.KeeperPrefix, configs.Version, configs.TypeCloudware, body.Name)
+	key := path.Join(configs.KeeperPrefix, configs.Version, body.Name)
 	return keeper.etcdClient.CheckExist(key)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/kfcoding-cloudware-controller/apihandler"
 	"github.com/kfcoding-cloudware-controller/service"
 	"github.com/kfcoding-cloudware-controller/etcd"
+	"path"
 )
 
 func main() {
@@ -19,13 +20,13 @@ func main() {
 	cloudwareService := service.GetCloudwareK8sService(keeperService, routingService)
 
 	watcher := service.GetEtcdWatcher(etcdClient)
-	go watcher.Watcher(configs.KeeperPrefix, cloudwareService)
+	go watcher.Watcher(path.Join(configs.KeeperPrefix, configs.Version), cloudwareService)
 
 	http.Handle("/keep/", apihandler.CreateKeeperController(keeperService))
 	http.Handle("/routing/", apihandler.CreateRoutingController(routingService))
 	http.Handle("/cloudware/", apihandler.CreateCloudwareController(cloudwareService))
 
-	log.Println("Start rest server")
+	log.Println("Start cloudware server")
 	log.Fatal(http.ListenAndServe(configs.ServerAddress, nil))
 
 }

@@ -26,8 +26,7 @@ func (watcher *EtcdWatcher) Watcher(prefix string, service CloudwareService) {
 
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
-			//fmt.Printf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
-			// /kfcoding/v1/1/cloduware-321dsnaknfkdsnjf9afndks
+			// /kfcoding/keepalive/cloudware/v1/cloduware-321dsnaknfkdsnjf9afndks
 			switch ev.Type {
 			case 1: //DELETE
 				log.Print("listen etcd delete: ", string(ev.Kv.Key))
