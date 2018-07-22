@@ -7,11 +7,11 @@ import (
 	"github.com/kfcoding-cloudware-controller/configs"
 	"github.com/satori/go.uuid"
 	"encoding/json"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/typed/core/v1"
 	v12 "k8s.io/api/core/v1"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 type CloudwareK8sService struct {
@@ -19,7 +19,7 @@ type CloudwareK8sService struct {
 	Routing          RoutingService
 	PodInterface     v1.PodInterface
 	ServiceInterface v1.ServiceInterface
-	K8sClient        *kubernetes.Clientset
+	K8sClient        kubernetes.Interface
 }
 
 func GetCloudwareK8sService(keeper KeeperService, routing RoutingService) *CloudwareK8sService {
@@ -29,6 +29,11 @@ func GetCloudwareK8sService(keeper KeeperService, routing RoutingService) *Cloud
 		log.Fatal("Could not init in cluster config: ", err.Error())
 	}
 	K8sClient, err := kubernetes.NewForConfig(cfg)
+
+	// K8sClient, _, err := GetClientAndConfig()
+	if err != nil {
+		log.Fatal("Could not init k8s config: ", err.Error())
+	}
 	PodInterface := K8sClient.CoreV1().Pods(configs.Namespace)
 	ServiceInterface := K8sClient.CoreV1().Services(configs.Namespace)
 
@@ -53,17 +58,17 @@ func (service *CloudwareK8sService) WatcherCallback(body *types.KeeperBody) {
 	log.Printf("WatcherCallback ok: %+v\n", body)
 }
 
-func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody) (string, error) {
+func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody) (string, string, error) {
 	name, err := service.CreateCloudwarePod(body)
 	if nil != err {
 		service.DeleteCloudwarePod(name)
-		return "", err
+		return "", "", err
 	}
 	v1Service, err := service.CreateCloudwareService(name)
 	if nil != err {
 		service.DeleteCloudwarePod(name)
 		service.DeleteCloudwareService(name)
-		return "", err
+		return "", "", err
 	}
 	service.Keeper.Keep(&types.KeeperBody{Name: name})
 	wsAddr := name + "." + configs.WsAddrSuffix
@@ -72,7 +77,7 @@ func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody
 		URL:  "http://" + v1Service.Spec.ClusterIP + ":9800",
 		Rule: "Host: " + wsAddr,
 	})
-	return wsAddr, nil
+	return wsAddr, name, nil
 }
 
 func (service *CloudwareK8sService) CreateCloudwareService(name string) (*v12.Service, error) {

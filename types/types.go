@@ -21,6 +21,7 @@ type CloudwareBody struct {
 }
 
 type ResponseBody struct {
+	Name  string
 	Data  string
 	Error string
 }

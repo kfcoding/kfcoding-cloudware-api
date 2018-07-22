@@ -10,9 +10,9 @@ docker run -it -v /Users/wsl/go/src:/go/src golang:1.10.3-alpine3.8 sh
 
 cd src/github.com/kfcoding-cloudware-controller/ && go build -o controller main.go
 
-scp controller root@worker:/home/cloudware-controller
+scp controller root@worker:/home/kfcoding-cloudware-controller
 
 cd /home/kfcoding-cloudware-controller && \
-docker build -t daocloud.io/shaoling/kfcoding-cloudware-controller:v1.8 .
+docker build -t daocloud.io/shaoling/kfcoding-cloudware-controller:v2.0 .
 
 ```

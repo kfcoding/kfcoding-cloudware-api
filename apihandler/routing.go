@@ -42,6 +42,13 @@ func CreateRoutingController(routingService service.RoutingService) (http.Handle
 	wsContainer.EnableContentEncoding(true)
 	wsContainer.Add(apiV1Ws)
 
+	cors := restful.CrossOriginResourceSharing{
+		AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+		AllowedHeaders: []string{"Authorization", "Content-Type", "Accept", "Token"},
+		CookiesAllowed: false,
+		Container:      wsContainer}
+	wsContainer.Filter(cors.Filter)
+
 	return wsContainer
 }
 

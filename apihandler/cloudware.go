@@ -32,6 +32,13 @@ func CreateCloudwareController(cloudwareService service.CloudwareService) (http.
 	wsContainer.EnableContentEncoding(true)
 	wsContainer.Add(apiV1Ws)
 
+	cors := restful.CrossOriginResourceSharing{
+		AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+		AllowedHeaders: []string{"Authorization", "Content-Type", "Accept", "Token"},
+		CookiesAllowed: false,
+		Container:      wsContainer}
+	wsContainer.Filter(cors.Filter)
+
 	return wsContainer
 }
 
@@ -52,10 +59,10 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 	}
 	log.Printf("handleCreateCloudware: %+v\n", body)
 
-	data, err := controller.cloudwareService.CreateCloudwareApi(body)
+	data,name, err := controller.cloudwareService.CreateCloudwareApi(body)
 
 	if err == nil {
-		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: data})
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: data, Name:name})
 	} else {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
 	}
