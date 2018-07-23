@@ -13,6 +13,7 @@ var (
 	Token         = ""
 	Version       = "v1"
 	Namespace     = "kfcoding-alpha"
+	InCluster     = ""
 )
 
 // etcd config
@@ -48,6 +49,9 @@ func InitEnv() {
 	}
 	if version := os.Getenv("Version"); version != "" {
 		Version = version
+	}
+	if inCluster := os.Getenv("InCluster"); inCluster != "" {
+		InCluster = inCluster
 	}
 
 	// etcd config

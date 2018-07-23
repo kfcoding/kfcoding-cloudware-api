@@ -24,23 +24,35 @@ type CloudwareK8sService struct {
 
 func GetCloudwareK8sService(keeper KeeperService, routing RoutingService) *CloudwareK8sService {
 
-	cfg, err := rest.InClusterConfig()
-	if err != nil {
-		log.Fatal("Could not init in cluster config: ", err.Error())
-	}
-	K8sClient, err := kubernetes.NewForConfig(cfg)
+	var cfg *rest.Config
+	var k8sClient kubernetes.Interface
+	var err error
 
-	// K8sClient, _, err := GetClientAndConfig()
-	if err != nil {
-		log.Fatal("Could not init k8s config: ", err.Error())
+	if configs.InCluster != "" {
+		cfg, err = rest.InClusterConfig()
+		if err != nil {
+			log.Fatal("Could not init in cluster config: ", err.Error())
+		}
+		k8sClient, err = kubernetes.NewForConfig(cfg)
+		if err != nil {
+			log.Fatal("Could not init in cluster k8sclient: ", err.Error())
+		}
+		log.Print("init in cluster k8s api")
+	} else {
+		k8sClient, cfg, err = GetClientAndConfig()
+		if err != nil {
+			log.Fatal("Could not init out of cluster k8sclient: ", err.Error())
+		}
+		log.Print("init out of cluster k8s api")
 	}
-	PodInterface := K8sClient.CoreV1().Pods(configs.Namespace)
-	ServiceInterface := K8sClient.CoreV1().Services(configs.Namespace)
+
+	PodInterface := k8sClient.CoreV1().Pods(configs.Namespace)
+	ServiceInterface := k8sClient.CoreV1().Services(configs.Namespace)
 
 	return &CloudwareK8sService{
 		Keeper:           keeper,
 		Routing:          routing,
-		K8sClient:        K8sClient,
+		K8sClient:        k8sClient,
 		PodInterface:     PodInterface,
 		ServiceInterface: ServiceInterface,
 	}
