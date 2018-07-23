@@ -88,7 +88,8 @@ func InitEnv() {
 	log.Print("ServerAddress:  ", ServerAddress)
 	log.Print("Token:          ", Token)
 	log.Print("Version:        ", Version)
-	log.Print("Version:        ", Version)
+	log.Print("Namespace:      ", Namespace)
+	log.Print("InCluster:      ", InCluster)
 
 	log.Print("EtcdEndPoints:  ", EtcdEndPoints)
 	log.Print("EtcdUsername:   ", EtcdUsername)
