@@ -39,6 +39,7 @@ func (service *RoutingTraefikService) AddRules(rules []interface{}) error {
 	return err
 }
 
+// DeleteRule(*types.RoutingBody) error
 func (service *RoutingTraefikService) DeleteRule(rule *types.RoutingBody) error {
 	return service.deleteFromEtcd(rule)
 }

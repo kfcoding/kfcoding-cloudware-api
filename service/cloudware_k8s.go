@@ -12,6 +12,7 @@ import (
 	v12 "k8s.io/api/core/v1"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"strings"
 )
 
 type CloudwareK8sService struct {
@@ -123,7 +124,7 @@ func (service *CloudwareK8sService) CreateCloudwarePod(body *types.CloudwareBody
 		log.Print("CreateCloudwarePod error: ", err)
 		return "", err
 	}
-	var name = "cloudware-" + uuid.Must(uuid.NewV4()).String()
+	var name = "cloudware-" + strings.Replace(uuid.Must(uuid.NewV4()).String(), "_", "aa", -1)
 	podBody.Name = name
 	podBody.Namespace = configs.Namespace
 	podBody.Labels["app"] = name

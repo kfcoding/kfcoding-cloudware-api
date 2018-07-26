@@ -26,7 +26,7 @@ func main() {
 	http.Handle("/routing/", apihandler.CreateRoutingController(routingService))
 	http.Handle("/cloudware/", apihandler.CreateCloudwareController(cloudwareService))
 
-	log.Println("Start cloudware server")
+	log.Println("Start cloudware server v1")
 	log.Fatal(http.ListenAndServe(configs.ServerAddress, nil))
 
 }
