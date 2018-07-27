@@ -34,6 +34,8 @@ var (
 var (
 	PrefixTraefik = "/kfcoding/traefik/"
 	WsAddrSuffix  = "cloudware.kfcoding.com"
+	TraefikPort   = ""
+	FrontendPort  = ":30081"
 )
 
 func InitEnv() {
@@ -84,6 +86,12 @@ func InitEnv() {
 	if wsAddrSuffix := os.Getenv("WsAddrSuffix"); wsAddrSuffix != "" {
 		WsAddrSuffix = wsAddrSuffix
 	}
+	if traefikPort := os.Getenv("TraefikPort"); traefikPort != "" {
+		TraefikPort = traefikPort
+	}
+	if frontendPort := os.Getenv("FrontendPort"); frontendPort != "" {
+		FrontendPort = frontendPort
+	}
 
 	log.Print("ServerAddress:  ", ServerAddress)
 	log.Print("Token:          ", Token)
@@ -100,5 +108,7 @@ func InitEnv() {
 
 	log.Print("PrefixTraefik:  ", PrefixTraefik)
 	log.Print("WsAddrSuffix:   ", WsAddrSuffix)
+	log.Print("TraefikPort:    ", TraefikPort)
+	log.Print("FrontendPort:   ", FrontendPort)
 
 }

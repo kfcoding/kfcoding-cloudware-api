@@ -59,10 +59,10 @@ func (controller *CloudwareController) handleCreateCloudware(request *restful.Re
 	}
 	log.Printf("handleCreateCloudware: %+v\n", body)
 
-	data,name, err := controller.cloudwareService.CreateCloudwareApi(body)
+	data, name, err := controller.cloudwareService.CreateCloudwareApi(body)
 
 	if err == nil {
-		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: data, Name:name})
+		response.WriteHeaderAndEntity(http.StatusOK, types.ResponseBody{Data: data, Name: name})
 	} else {
 		response.WriteHeaderAndEntity(http.StatusInternalServerError, types.ResponseBody{Error: err.Error()})
 	}

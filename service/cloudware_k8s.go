@@ -87,10 +87,11 @@ func (service *CloudwareK8sService) CreateCloudwareApi(body *types.CloudwareBody
 	wsAddr := name + "." + configs.WsAddrSuffix
 	service.Routing.AddRule(&types.RoutingBody{
 		Name: name,
-		URL:  "http://" + v1Service.Spec.ClusterIP + ":9800",
-		Rule: "Host: " + wsAddr,
+		//URL:  "http://" + v1Service.Spec.ClusterIP + ":9800",
+		URL:  v1Service.Spec.ClusterIP + ":9800",
+		Rule: "Host: " + wsAddr + configs.TraefikPort,
 	})
-	return wsAddr, name, nil
+	return wsAddr + configs.FrontendPort, name, nil
 }
 
 func (service *CloudwareK8sService) CreateCloudwareService(name string) (*v12.Service, error) {
